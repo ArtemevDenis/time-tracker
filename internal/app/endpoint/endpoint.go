@@ -168,7 +168,6 @@ func (e *Endpoint) Login(ctx echo.Context) (err error) {
 	if err = bcrypt.CompareHashAndPassword([]byte(storedUser.Password), []byte(u.Password)); err != nil {
 		return echo.NewHTTPError(http.StatusUnauthorized, "Password is incorrect")
 	}
-	// If password is correct, generate tokens and set cookies.
 	var jwt = new(entity.JWT)
 	jwt, err = auth.GenerateTokens(&storedUser)
 
@@ -203,23 +202,6 @@ func (e *Endpoint) Refresh(ctx echo.Context) (err error) {
 	}
 
 	fmt.Println(id)
-	//
-	//token, err := jwt.ParseWithClaims(stringToken, claims, func(token *jwt.Token) (interface{}, error) {
-	//	// since we only use the one private key to sign the tokens,
-	//	// we also only use its public counter part to verify
-	//	return []byte(auth.GetRefreshJWTSecret()), nil
-	//})
-	//
-	//fmt.Println(token.Valid)
-	//for key, val := range claims {
-	//	fmt.Printf("Key: %v, value: %v\n", key, val)
-	//}
-
-	//claims = token.Claims.(*auth.JwtCustomClaims)
-	//token := ctx.Request().Header.Get("Refresh-Token").(*jwt.Token)
-	//claims, err := auth.GetClaims(token)
-	//
-	//fmt.Println(claims)
 
 	return ctx.JSON(http.StatusOK, claims)
 }
