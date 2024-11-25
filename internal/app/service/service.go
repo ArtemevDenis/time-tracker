@@ -35,6 +35,7 @@ func (s *Service) CreateTask(task *entity.Task) (t *entity.Task, err error) {
 		Tag:         task.Tag,
 		Author:      task.Author,
 		Date:        task.Date,
+		AuthorId:    task.AuthorId,
 	}
 	return t, nil
 }
@@ -44,6 +45,9 @@ func (s *Service) GetTasks(filter *entity.TaskFilter) ([]entity.Task, error) {
 
 	if filter.ID != primitive.NilObjectID {
 		bsonFilter["_id"] = filter.ID
+	}
+	if filter.AuthorId != primitive.NilObjectID {
+		bsonFilter["author_id"] = filter.AuthorId
 	}
 	if filter.Title != "" {
 		bsonFilter["title"] = bson.M{"$regex": filter.Title, "$options": "i"}
@@ -96,8 +100,8 @@ func (s *Service) GetTasks(filter *entity.TaskFilter) ([]entity.Task, error) {
 	return tasks, nil
 }
 
-func (s *Service) UpdateTask(task *entity.Task) (t *entity.Task, err error) {
-	_, err = s.db.Collection("tasks").UpdateOne(context.TODO(), bson.M{"_id": task.ID}, bson.M{"$set": task})
+func (s *Service) UpdateTask(task *entity.Task, authorId *primitive.ObjectID) (t *entity.Task, err error) {
+	_, err = s.db.Collection("tasks").UpdateOne(context.TODO(), bson.M{"_id": task.ID, "author_id": authorId}, bson.M{"$set": task})
 	if err != nil {
 		return nil, err
 	}
@@ -121,8 +125,8 @@ func (s *Service) UpdateTask(task *entity.Task) (t *entity.Task, err error) {
 	return t, nil
 }
 
-func (s *Service) DeleteTask(id *primitive.ObjectID) (err error) {
-	res, err := s.db.Collection("tasks").DeleteOne(context.TODO(), bson.D{{"_id", id}})
+func (s *Service) DeleteTask(id *primitive.ObjectID, authorId *primitive.ObjectID) (err error) {
+	res, err := s.db.Collection("tasks").DeleteOne(context.TODO(), bson.D{{"_id", id}, {"author_id", authorId}})
 	if err != nil {
 		return err
 	}
@@ -131,4 +135,13 @@ func (s *Service) DeleteTask(id *primitive.ObjectID) (err error) {
 		return errors.New("nothing to delete")
 	}
 	return nil
+}
+
+func (s *Service) GetUserByEmail(email *string) (*entity.User, error) {
+	user := entity.User{}
+	err := s.db.Collection("users").FindOne(context.TODO(), bson.M{"email": *email}).Decode(&user)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
 }

@@ -51,13 +51,17 @@ func New() (*App, error) {
 
 	a.echo.Use(echoMiddleware.Logger())
 	a.echo.Use(echoMiddleware.Recover())
+	a.echo.Use(echoMiddleware.CORSWithConfig(echoMiddleware.CORSConfig{
+		AllowOrigins: []string{"*"},
+	}))
 
-	a.echo.GET("/status", a.e.Status)
+	api := a.echo.Group("/api")
+	api.GET("/status", a.e.Status)
 
-	a.echo.POST("/login", a.e.Login)
-	a.echo.POST("/refresh", a.e.Refresh)
+	api.POST("/login", a.e.Login)
+	api.POST("/refresh", a.e.Refresh)
 
-	tasks := a.echo.Group("/tasks")
+	tasks := api.Group("/tasks")
 	tasks.Use(echojwt.WithConfig(*auth.GetConfig()))
 
 	tasks.POST("", a.e.CreateTask)

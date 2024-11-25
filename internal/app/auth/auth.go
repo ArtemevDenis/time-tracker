@@ -7,6 +7,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"time"
 )
 
@@ -20,8 +21,8 @@ func GetJWTSecret() string {
 }
 
 type JwtCustomClaims struct {
-	Name string `json:"name"`
-	ID   string `json:"id"`
+	Name string             `json:"name"`
+	ID   primitive.ObjectID `json:"id"`
 	jwt.RegisteredClaims
 }
 
@@ -34,7 +35,7 @@ func generateAccessToken(user *entity.User) (string, time.Time, error) {
 func generateToken(user *entity.User, expirationTime time.Time, secret []byte) (string, time.Time, error) {
 	claims := &JwtCustomClaims{
 		user.Name,
-		user.ID.Hex(),
+		user.ID,
 		jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 		},
